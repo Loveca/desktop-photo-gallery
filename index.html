@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark light" />
+<title>静照 · 本地相册</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237c9cff'/%3E%3Ccircle cx='21.5' cy='11' r='3.6' fill='%230a0b0d'/%3E%3Cpath d='M3 26.5l7.5-8.5 5 4.2 4.2-3.2L29 26.5z' fill='%230a0b0d'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles/base.css" />
+<link rel="stylesheet" href="styles/shell.css" />
+<link rel="stylesheet" href="styles/grid.css" />
+<link rel="stylesheet" href="styles/viewer.css" />
+</head>
+<body>
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 5.5h18M3 12h18M3 18.5h11"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6.8A1.8 1.8 0 0 1 4.8 5h4.1l1.9 2.6h8.4A1.8 1.8 0 0 1 21 9.4v7.8A1.8 1.8 0 0 1 19.2 19H4.8A1.8 1.8 0 0 1 3 17.2z"/></symbol>
+    <symbol id="i-folder-plus" viewBox="0 0 24 24"><path d="M3 6.8A1.8 1.8 0 0 1 4.8 5h4.1l1.9 2.6h8.4A1.8 1.8 0 0 1 21 9.4v7.8A1.8 1.8 0 0 1 19.2 19H4.8A1.8 1.8 0 0 1 3 17.2z"/><path d="M12 10.6v5M9.5 13.1h5"/></symbol>
+    <symbol id="i-photos" viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="12" rx="2"/><path d="M7 3.5h11.5A2.5 2.5 0 0 1 21 6v9.5"/><circle cx="7.8" cy="10.3" r="1.3"/><path d="M3.6 16.3l3.9-3.4 3.3 2.8 2.7-2.2 3.5 3"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.6l2.6 5.3 5.9.86-4.25 4.14 1 5.86L12 16.99 6.75 19.76l1-5.86L3.5 9.76l5.9-.86z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5.2l3.2 2"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.4"/></symbol>
+    <symbol id="i-justified" viewBox="0 0 24 24"><rect x="3.5" y="4" width="9" height="6.5" rx="1.3"/><rect x="14.5" y="4" width="6" height="6.5" rx="1.3"/><rect x="3.5" y="13.5" width="5.5" height="6.5" rx="1.3"/><rect x="11" y="13.5" width="9.5" height="6.5" rx="1.3"/></symbol>
+    <symbol id="i-sort" viewBox="0 0 24 24"><path d="M4 7h11M4 12h8M4 17h5"/><path d="M17.5 9.5V19M14.6 16.2l2.9 2.9 2.9-2.9"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M4.4 4.4l1.6 1.6M18 18l1.6 1.6M2.6 12h2.2M19.2 12h2.2M4.4 19.6L6 18M18 6l1.6-1.6"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.2A8.4 8.4 0 0 1 9.8 4 8.5 8.5 0 1 0 20 14.2z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="M14.5 5L7.5 12l7 7"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M9.5 5l7 7-7 7"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 11v5.4"/><circle cx="12" cy="7.9" r="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.4l10 6.6-10 6.6z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M9 3.8H4.2v4.7M15 3.8h4.8v4.7M9 20.2H4.2v-4.7M15 20.2h4.8v-4.7"/></symbol>
+    <symbol id="i-shrink" viewBox="0 0 24 24"><path d="M4.2 9H9V4.2M19.8 9H15V4.2M4.2 15H9v4.8M19.8 15H15v4.8"/></symbol>
+    <symbol id="i-zoom-in" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M11 8.4v5.2M8.4 11h5.2M16 16l4.5 4.5"/></symbol>
+    <symbol id="i-zoom-out" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M8.4 11h5.2M16 16l4.5 4.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4.8 12.6l4.6 4.6L19.2 7.4"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M6.5 9.5L12 15l5.5-5.5"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3.4" y="4.6" width="17.2" height="14.8" rx="2.2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17.4l5-4.4 3.6 3.1 3.2-2.6 4.2 3.6"/></symbol>
+    <symbol id="i-broken" viewBox="0 0 24 24"><rect x="3.4" y="4.6" width="17.2" height="14.8" rx="2.2"/><path d="M3.6 15.2l4.6-4 3.2 2.8M14 11.6l2.2-2 4.2 3.6M9 8.6h.01"/></symbol>
+    <symbol id="i-rescan" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20.4 3.6V8H16"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.6" y="6.2" width="18.8" height="11.6" rx="2.2"/><path d="M6.4 10h.01M9.6 10h.01M12.8 10h.01M16 10h.01M6.4 14.4h11.2"/></symbol>
+  </defs>
+</svg>
+
+<div class="app" id="app">
+
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="icon-btn" id="btnSidebar" title="侧栏 ( [ )" aria-label="切换侧栏"><svg><use href="#i-menu"/></svg></button>
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-text"><b>静照</b><i>本地相册</i></span>
+      </div>
+    </div>
+
+    <div class="searchbox">
+      <svg class="searchbox-ico"><use href="#i-search"/></svg>
+      <input id="search" type="search" placeholder="搜索文件名或文件夹…   /" autocomplete="off" spellcheck="false" />
+      <button class="searchbox-clear" id="searchClear" hidden aria-label="清空"><svg><use href="#i-close"/></svg></button>
+    </div>
+
+    <div class="topbar-right">
+      <div class="seg" role="group" aria-label="排布方式">
+        <button class="seg-btn" data-layout="justified" title="自适应排布"><svg><use href="#i-justified"/></svg></button>
+        <button class="seg-btn" data-layout="square" title="方格排布"><svg><use href="#i-grid"/></svg></button>
+      </div>
+
+      <label class="density" title="缩略图大小">
+        <input id="density" type="range" min="120" max="400" step="4" aria-label="缩略图大小" />
+      </label>
+
+      <div class="pop-host">
+        <button class="icon-btn" id="btnSort" title="排序与分组" aria-haspopup="menu"><svg><use href="#i-sort"/></svg></button>
+        <div class="pop" id="popSort" hidden>
+          <div class="pop-title">排序</div>
+          <button class="pop-item" data-sort="taken">拍摄时间<svg><use href="#i-check"/></svg></button>
+          <button class="pop-item" data-sort="mtime">修改时间<svg><use href="#i-check"/></svg></button>
+          <button class="pop-item" data-sort="name">文件名<svg><use href="#i-check"/></svg></button>
+          <button class="pop-item" data-sort="size">文件大小<svg><use href="#i-check"/></svg></button>
+          <div class="pop-sep"></div>
+          <button class="pop-item" data-dir="desc">由新到旧 / 由大到小<svg><use href="#i-check"/></svg></button>
+          <button class="pop-item" data-dir="asc">由旧到新 / 由小到大<svg><use href="#i-check"/></svg></button>
+          <div class="pop-sep"></div>
+          <div class="pop-title">分组</div>
+          <button class="pop-item" data-group="none">不分组<svg><use href="#i-check"/></svg></button>
+          <button class="pop-item" data-group="day">按天<svg><use href="#i-check"/></svg></button>
+          <button class="pop-item" data-group="month">按月<svg><use href="#i-check"/></svg></button>
+          <button class="pop-item" data-group="year">按年<svg><use href="#i-check"/></svg></button>
+          <button class="pop-item" data-group="folder">按文件夹<svg><use href="#i-check"/></svg></button>
+        </div>
+      </div>
+
+      <button class="icon-btn" id="btnTheme" title="切换明暗 ( T )" aria-label="切换明暗"><svg class="ico-dark"><use href="#i-moon"/></svg><svg class="ico-light"><use href="#i-sun"/></svg></button>
+      <button class="icon-btn" id="btnHelp" title="快捷键 ( ? )" aria-label="快捷键"><svg><use href="#i-keyboard"/></svg></button>
+      <button class="btn btn-primary" id="btnOpen"><svg><use href="#i-folder-plus"/></svg><span>打开文件夹</span></button>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="side-scroll">
+      <div class="side-group">
+        <button class="side-item" data-scope="all"><svg><use href="#i-photos"/></svg><span>全部照片</span><em id="cntAll">0</em></button>
+        <button class="side-item" data-scope="fav"><svg><use href="#i-star"/></svg><span>收藏</span><em id="cntFav">0</em></button>
+      </div>
+
+      <div class="side-group" id="yearsGroup" hidden>
+        <div class="side-title"><svg><use href="#i-clock"/></svg>时间</div>
+        <div id="years"></div>
+      </div>
+
+      <div class="side-group" id="foldersGroup" hidden>
+        <div class="side-title"><svg><use href="#i-folder"/></svg>文件夹</div>
+        <div id="folders" class="tree"></div>
+      </div>
+    </div>
+
+    <div class="side-foot" id="sideFoot" hidden>
+      <div class="lib-name" id="libName">—</div>
+      <div class="lib-meta" id="libMeta">—</div>
+      <button class="btn btn-quiet btn-block" id="btnRescan"><svg><use href="#i-rescan"/></svg><span>重新扫描</span></button>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="scroller" id="scroller" tabindex="0">
+      <div class="canvas" id="canvas"></div>
+    </div>
+    <div class="scrub" id="scrub" hidden></div>
+    <div class="float-chip" id="floatChip" hidden></div>
+
+    <section class="empty" id="empty">
+      <div class="empty-card">
+        <div class="empty-art" aria-hidden="true"><span></span><span></span><span></span></div>
+        <h2>把本地照片，安静地看完</h2>
+        <p>选一个文件夹，静照在本机读取里面的照片、解析拍摄信息、生成缩略图。<br />不上传，不联网，关掉就结束。</p>
+        <div class="empty-actions">
+          <button class="btn btn-primary btn-lg" id="btnOpen2"><svg><use href="#i-folder-plus"/></svg><span>选择文件夹</span></button>
+          <span class="empty-or">或者把文件夹直接拖进窗口</span>
+        </div>
+        <div class="resume" id="resume" hidden>
+          <div class="resume-info"><svg><use href="#i-clock"/></svg><span id="resumeText">上次的图库</span></div>
+          <button class="btn btn-quiet" id="btnResume">继续浏览</button>
+          <button class="icon-btn icon-btn-sm" id="btnForget" title="忘记这个图库"><svg><use href="#i-close"/></svg></button>
+        </div>
+        <div class="empty-formats">JPEG · PNG · WebP · AVIF · GIF · BMP · TIFF · HEIC</div>
+      </div>
+    </section>
+
+    <section class="nores" id="nores" hidden>
+      <svg><use href="#i-search"/></svg>
+      <p id="noresText">没有匹配的照片</p>
+      <button class="btn btn-quiet" id="btnClearFilters">清除筛选</button>
+    </section>
+  </main>
+
+  <div class="dropveil" id="dropveil"><div class="dropveil-inner"><svg><use href="#i-folder-plus"/></svg><b>松手导入</b><i>会连同子文件夹一起读取</i></div></div>
+</div>
+
+<div class="viewer" id="viewer" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="照片查看器">
+  <div class="vw-ambient" id="vwAmbient"></div>
+  <div class="vw-stage" id="vwStage">
+    <div class="vw-frame" id="vwFrame"><img id="vwImg" alt="" draggable="false" /></div>
+    <div class="vw-fail" id="vwFail" hidden><svg><use href="#i-broken"/></svg><p>浏览器无法解码这张图</p><small id="vwFailName"></small></div>
+  </div>
+
+  <div class="vw-chrome" id="vwChrome">
+    <div class="vw-top">
+      <div class="vw-title">
+        <b id="vwName">—</b>
+        <span id="vwPath"></span>
+      </div>
+      <div class="vw-tools">
+        <span class="vw-index" id="vwIndex">0 / 0</span>
+        <button class="icon-btn" id="vwFav" title="收藏 ( S )"><svg><use href="#i-star"/></svg></button>
+        <button class="icon-btn" id="vwSlide" title="幻灯片 ( 空格 )"><svg class="ico-play"><use href="#i-play"/></svg><svg class="ico-pause"><use href="#i-pause"/></svg></button>
+        <button class="icon-btn" id="vwInfo" title="信息 ( I )"><svg><use href="#i-info"/></svg></button>
+        <button class="icon-btn" id="vwFull" title="全屏 ( F )"><svg class="ico-exp"><use href="#i-expand"/></svg><svg class="ico-shr"><use href="#i-shrink"/></svg></button>
+        <button class="icon-btn" id="vwClose" title="关闭 ( Esc )"><svg><use href="#i-close"/></svg></button>
+      </div>
+    </div>
+
+    <button class="vw-nav vw-prev" id="vwPrev" aria-label="上一张"><svg><use href="#i-left"/></svg></button>
+    <button class="vw-nav vw-next" id="vwNext" aria-label="下一张"><svg><use href="#i-right"/></svg></button>
+
+    <div class="vw-bottom">
+      <div class="vw-zoom">
+        <button class="icon-btn icon-btn-sm" id="vwZoomOut" title="缩小 ( − )"><svg><use href="#i-zoom-out"/></svg></button>
+        <button class="zoom-val" id="vwZoomVal" title="适应窗口 ( 0 )">100%</button>
+        <button class="icon-btn icon-btn-sm" id="vwZoomIn" title="放大 ( + )"><svg><use href="#i-zoom-in"/></svg></button>
+      </div>
+      <div class="filmstrip" id="filmstrip"><div class="film-track" id="filmTrack"></div></div>
+    </div>
+
+    <div class="vw-slideprog" id="vwSlideProg"><i></i></div>
+  </div>
+
+  <aside class="vw-panel" id="vwPanel" hidden>
+    <div class="panel-head"><b>照片信息</b><button class="icon-btn icon-btn-sm" id="vwPanelClose"><svg><use href="#i-close"/></svg></button></div>
+    <div class="panel-body" id="vwPanelBody"></div>
+  </aside>
+</div>
+
+<div class="scanbar" id="scanbar" hidden><i id="scanfill"></i><span id="scantext"></span></div>
+<div class="toasts" id="toasts"></div>
+
+<div class="sheet" id="helpSheet" hidden>
+  <div class="sheet-card">
+    <div class="sheet-head"><b>快捷键</b><button class="icon-btn icon-btn-sm" id="helpClose"><svg><use href="#i-close"/></svg></button></div>
+    <div class="sheet-body">
+      <section><h4>浏览</h4>
+        <dl><dt>/</dt><dd>搜索</dd><dt>[</dt><dd>收起 / 展开侧栏</dd><dt>T</dt><dd>明暗切换</dd>
+        <dt>← ↑ ↓ →</dt><dd>移动选中</dd><dt>Enter</dt><dd>打开照片</dd><dt>− / +</dt><dd>缩略图大小</dd></dl></section>
+      <section><h4>看图</h4>
+        <dl><dt>← →</dt><dd>上一张 / 下一张</dd><dt>空格</dt><dd>幻灯片</dd><dt>I</dt><dd>照片信息</dd>
+        <dt>S</dt><dd>收藏</dd><dt>F</dt><dd>全屏</dd><dt>滚轮 / 双击</dt><dd>缩放</dd><dt>0</dt><dd>适应窗口</dd>
+        <dt>Home / End</dt><dd>首张 / 末张</dd><dt>Esc</dt><dd>退出</dd></dl></section>
+    </div>
+  </div>
+</div>
+
+<noscript><p style="padding:40px;text-align:center">静照需要启用 JavaScript。</p></noscript>
+
+<script>
+/* file:// 下 ES 模块 / Worker / IndexedDB 都会被浏览器拦掉，直接给出可操作的提示 */
+if (location.protocol === 'file:') {
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('app').innerHTML =
+      '<div style="display:grid;place-items:center;height:100dvh;padding:24px;text-align:center;grid-column:1/-1;grid-row:1/-1">' +
+      '<div style="max-width:430px"><h2 style="font-size:20px;margin-bottom:12px">请通过 start.bat 打开</h2>' +
+      '<p style="font-size:13.5px;line-height:1.8;color:#9aa1ac">静照用到了 ES 模块、Web Worker 和本地缓存，' +
+      '浏览器不允许在 <code>file://</code> 下使用它们。<br>双击目录里的 <b>start.bat</b>，' +
+      '它会起一个本地服务并自动打开页面。</p></div></div>';
+  });
+}
+</script>
+<script type="module" src="src/app.js"></script>
+</body>
+</html>

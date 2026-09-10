@@ -1,0 +1,134 @@
+/* ============================================================
+   静照 · 虚拟化照片网格
+   行与分组标题都是绝对定位，只挂载视口内的那几行。
+   ============================================================ */
+
+.row, .sec {
+  position: absolute; left: 0; right: 0;
+  contain: layout style;
+}
+
+/* ---------------- 分组标题 ---------------- */
+.sec {
+  display: flex; align-items: flex-end; gap: 10px;
+  padding-bottom: 12px;
+}
+.sec-label {
+  font-size: 15px; font-weight: 600; letter-spacing: .01em;
+  color: var(--text);
+}
+.sec-sub { font-size: 11.5px; color: var(--text-3); padding-bottom: 2px; }
+.sec-rule { flex: 1; height: 1px; background: var(--line); margin-bottom: 6px; }
+
+/* ---------------- 照片格 ---------------- */
+.tile {
+  position: absolute; top: 0;
+  overflow: hidden;
+  border-radius: var(--r-sm);
+  background: var(--elev-1);
+  cursor: pointer;
+  contain: strict;
+  transition: box-shadow var(--t) var(--e), transform var(--t) var(--e);
+}
+.tile::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--line);
+  pointer-events: none;
+  transition: box-shadow var(--t) var(--e);
+}
+
+.tile img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity .32s var(--e), transform .5s var(--e);
+}
+.tile img.in { opacity: 1; }
+
+.tile:hover { transform: translateY(-2px); box-shadow: var(--sh-2); z-index: 2; }
+.tile:hover img { transform: scale(1.045); }
+.tile:hover::after { box-shadow: inset 0 0 0 1px var(--line-2); }
+
+.tile:active { transform: translateY(-1px) scale(.994); }
+
+/* 键盘选中 */
+.tile.sel { z-index: 3; }
+.tile.sel::after {
+  box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 3px var(--accent-soft);
+}
+
+/* 打开动画结束后回到当前项 */
+.tile.origin { z-index: 4; }
+
+/* 载入中的呼吸底 */
+.tile.load { background: var(--elev-1); }
+.tile.load::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(100deg,
+      transparent 18%,
+      color-mix(in srgb, var(--text) 9%, transparent) 42%,
+      transparent 66%);
+  background-size: 260% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+@keyframes shimmer { to { background-position: -260% 0; } }
+.tile:not(.load)::before { content: none; }
+
+/* 无法解码的格 */
+.tile.dead { display: grid; place-items: center; }
+.tile.dead::before { content: none; }
+.tile-dead {
+  display: grid; place-items: center; gap: 6px;
+  color: var(--text-3); padding: 8px; text-align: center;
+}
+.tile-dead svg { width: 22px; height: 22px; }
+.tile-dead span {
+  font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+}
+
+/* 角标：收藏 */
+.tile-fav {
+  position: absolute; top: 6px; right: 6px; z-index: 2;
+  display: grid; place-items: center;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  color: #fff;
+  opacity: 0; transform: scale(.7);
+  background: rgba(10, 11, 13, .42);
+  backdrop-filter: blur(6px);
+  transition: opacity var(--t) var(--e), transform var(--t) var(--e), color var(--t-fast) var(--e);
+}
+.tile-fav svg { width: 14px; height: 14px; }
+.tile:hover .tile-fav { opacity: 1; transform: scale(1); }
+.tile-fav:hover { color: var(--star); }
+.tile.faved .tile-fav {
+  opacity: 1; transform: scale(1);
+  color: var(--star);
+}
+.tile.faved .tile-fav svg { fill: var(--star); stroke: none; }
+
+/* 底部文件名（仅悬停） */
+.tile-name {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+  padding: 22px 9px 7px;
+  font-size: 11px; color: #fff;
+  background: linear-gradient(transparent, rgba(0, 0, 0, .72));
+  opacity: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: opacity var(--t) var(--e);
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+}
+.tile:hover .tile-name { opacity: 1; }
+
+/* 密度很小时收掉装饰，避免视觉噪音 */
+.canvas.tiny .tile-name { display: none; }
+.canvas.tiny .tile-fav { width: 22px; height: 22px; top: 4px; right: 4px; }
+.canvas.tiny .tile-fav svg { width: 12px; height: 12px; }
+
+/* 首屏行的轻微入场 */
+.row.fresh .tile { animation: tileIn .42s var(--e) both; }
+@keyframes tileIn { from { opacity: 0; transform: translateY(8px); } }

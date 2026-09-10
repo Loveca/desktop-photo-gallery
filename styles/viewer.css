@@ -1,0 +1,308 @@
+/* ============================================================
+   静照 · 沉浸式查看器
+   舞台恒为暗色（无论明暗主题），让照片自己发声。
+   UI 闲置 2.5s 后淡出，移动鼠标即回。
+   ============================================================ */
+
+.viewer {
+  position: fixed; inset: 0; z-index: 200;
+  --stage-bg: #07080a;
+  --vw-ink: #f2f3f6;
+  --vw-ink-2: rgba(242, 243, 246, .58);
+  --vw-glass: rgba(18, 20, 24, .52);
+  --vw-line: rgba(255, 255, 255, .12);
+  background: var(--stage-bg);
+  color: var(--vw-ink);
+  overflow: hidden;
+  animation: vwIn .26s var(--e) both;
+  user-select: none;
+}
+.viewer.closing { animation: vwOut .18s var(--e-in) both; }
+@keyframes vwIn  { from { opacity: 0; } }
+@keyframes vwOut { to   { opacity: 0; } }
+
+/* 环境底：当前照片的缩略图放大后重度模糊，像展墙上的余光 */
+.vw-ambient {
+  position: absolute; inset: -12%;
+  background-size: cover; background-position: center;
+  filter: blur(64px) saturate(1.25) brightness(.5);
+  opacity: .38;
+  transform: scale(1.1);
+  transition: opacity .5s var(--e), background-image .5s var(--e);
+  pointer-events: none;
+}
+.vw-ambient::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center,
+      transparent 24%, rgba(0, 0, 0, .62) 100%);
+}
+.viewer.no-ambient .vw-ambient { opacity: 0; }
+
+/* ---------------- 舞台 ---------------- */
+.vw-stage {
+  position: absolute; inset: 0;
+  touch-action: none;
+  cursor: default;
+  overflow: hidden;
+}
+.vw-stage.grab   { cursor: grab; }
+.vw-stage.grabbing { cursor: grabbing; }
+.vw-stage.zoomable { cursor: zoom-in; }
+
+.vw-frame {
+  position: absolute; top: 0; left: 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.vw-frame img {
+  display: block;
+  max-width: none;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .6);
+  background: rgba(255,255,255,.02);
+}
+
+/* 切换时的交叉淡入 */
+.vw-ghost {
+  position: absolute; top: 0; left: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+  animation: ghostOut .34s var(--e) both;
+}
+.vw-ghost img { display: block; box-shadow: 0 30px 90px rgba(0,0,0,.6); }
+@keyframes ghostOut { to { opacity: 0; } }
+.vw-frame img.fresh { animation: freshIn .34s var(--e) both; }
+@keyframes freshIn { from { opacity: 0; } }
+
+.vw-fail {
+  position: absolute; inset: 0;
+  display: grid; place-items: center; align-content: center; gap: 10px;
+  color: var(--vw-ink-2); text-align: center;
+}
+.vw-fail svg { width: 42px; height: 42px; }
+.vw-fail p { font-size: 14px; }
+.vw-fail small { font-size: 11.5px; color: rgba(242,243,246,.35); }
+
+/* ---------------- 控件层 ---------------- */
+.vw-chrome {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity .4s var(--e);
+}
+.vw-chrome > * { pointer-events: auto; }
+.viewer.idle .vw-chrome { opacity: 0; pointer-events: none; }
+.viewer.idle { cursor: none; }
+
+.vw-top {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 16px 30px;
+  background: linear-gradient(rgba(0, 0, 0, .55), transparent);
+  transition: transform .4s var(--e);
+}
+.viewer.idle .vw-top { transform: translateY(-8px); }
+/* 信息面板压在最上层，顶栏要让位，否则关闭/收藏都点不到 */
+.viewer.panel-open .vw-top { right: var(--panel-w); }
+
+.vw-title { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.vw-title b {
+  font-size: 13.5px; font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.vw-title span {
+  font-size: 11px; color: var(--vw-ink-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+.vw-tools { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.vw-index {
+  margin-right: 8px; padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--vw-glass); border: 1px solid var(--vw-line);
+  backdrop-filter: blur(10px);
+  font-size: 11.5px; color: var(--vw-ink-2);
+}
+.vw-tools .icon-btn { color: var(--vw-ink-2); }
+.vw-tools .icon-btn:hover { background: rgba(255, 255, 255, .1); color: var(--vw-ink); }
+.vw-tools .icon-btn.on { background: rgba(255, 255, 255, .14); color: var(--vw-ink); }
+
+#vwFav.on { color: var(--star); background: transparent; }
+#vwFav.on svg { fill: var(--star); stroke: none; }
+#vwSlide .ico-pause, #vwFull .ico-shr { display: none; }
+.viewer.playing #vwSlide .ico-play  { display: none; }
+.viewer.playing #vwSlide .ico-pause { display: block; }
+.viewer.fs #vwFull .ico-exp { display: none; }
+.viewer.fs #vwFull .ico-shr { display: block; }
+
+/* 左右翻页 */
+.vw-nav {
+  position: absolute; top: 50%; z-index: 3;
+  display: grid; place-items: center;
+  width: 46px; height: 46px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--vw-glass);
+  border: 1px solid var(--vw-line);
+  backdrop-filter: blur(10px);
+  color: var(--vw-ink-2);
+  transition: background var(--t) var(--e), color var(--t) var(--e),
+              transform var(--t) var(--e), opacity var(--t) var(--e);
+}
+.vw-nav svg { width: 20px; height: 20px; }
+.vw-nav:hover { background: rgba(255, 255, 255, .16); color: var(--vw-ink); }
+.vw-prev { left: 18px; }
+.vw-next { right: 18px; }
+.vw-prev:hover { transform: translateY(-50%) translateX(-2px); }
+.vw-next:hover { transform: translateY(-50%) translateX(2px); }
+.vw-nav[disabled] { opacity: .22; pointer-events: none; }
+.viewer.panel-open .vw-next { right: calc(var(--panel-w) + 18px); }
+
+/* 底部 */
+.vw-bottom {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 40px 16px 14px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, .6));
+  transition: transform .4s var(--e);
+}
+.viewer.idle .vw-bottom { transform: translateY(10px); }
+.viewer.panel-open .vw-bottom { right: var(--panel-w); }
+
+.vw-zoom {
+  display: flex; align-items: center; gap: 2px;
+  padding: 3px;
+  border-radius: var(--r-pill);
+  background: var(--vw-glass);
+  border: 1px solid var(--vw-line);
+  backdrop-filter: blur(10px);
+}
+.vw-zoom .icon-btn { color: var(--vw-ink-2); }
+.vw-zoom .icon-btn:hover { background: rgba(255, 255, 255, .12); color: var(--vw-ink); }
+.zoom-val {
+  min-width: 54px; padding: 0 4px;
+  font-size: 11.5px; color: var(--vw-ink-2);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--t-fast) var(--e);
+}
+.zoom-val:hover { color: var(--vw-ink); }
+
+/* 胶片条 */
+.filmstrip {
+  width: 100%; max-width: 100%;
+  overflow-x: auto; overflow-y: hidden;
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  transition: opacity var(--t) var(--e);
+}
+.filmstrip::-webkit-scrollbar { display: none; }
+.film-track {
+  display: flex; gap: 5px;
+  padding: 3px 50%;
+  width: max-content;
+}
+.film-cell {
+  position: relative;
+  width: 52px; height: 52px; flex: none;
+  border-radius: 5px; overflow: hidden;
+  background: rgba(255, 255, 255, .05);
+  opacity: .42;
+  transform: scale(.9);
+  transition: opacity var(--t) var(--e), transform var(--t) var(--e), box-shadow var(--t) var(--e);
+}
+.film-cell img { width: 100%; height: 100%; object-fit: cover; }
+.film-cell:hover { opacity: .8; transform: scale(.97); }
+.film-cell.on {
+  opacity: 1; transform: scale(1);
+  box-shadow: 0 0 0 2px var(--vw-ink);
+}
+.film-cell.fav::after {
+  content: ""; position: absolute; right: 4px; top: 4px;
+  width: 5px; height: 5px; border-radius: 50%; background: var(--star);
+}
+
+/* 幻灯片进度 */
+.vw-slideprog {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  height: 2px; opacity: 0;
+  transition: opacity var(--t) var(--e);
+}
+.viewer.playing .vw-slideprog { opacity: 1; }
+.vw-slideprog i {
+  display: block; height: 100%; width: 0;
+  background: var(--vw-ink);
+  opacity: .8;
+}
+
+/* 幻灯片：缓慢推移，是沉浸感的主要来源。
+   叠在 img 上，不和 frame 的适应/缩放变换打架。 */
+.viewer.playing.kb .vw-frame img {
+  transform-origin: center;
+  animation: kenburns var(--kb-dur, 5000ms) linear both;
+}
+@keyframes kenburns {
+  from { transform: var(--kb-from, scale(1)); }
+  to   { transform: var(--kb-to, scale(1.07)); }
+}
+
+/* ---------------- 信息面板 ---------------- */
+.viewer { --panel-w: 300px; }
+.vw-panel {
+  position: absolute; top: 0; right: 0; bottom: 0; z-index: 5;
+  width: var(--panel-w);
+  display: flex; flex-direction: column;
+  background: rgba(14, 16, 19, .82);
+  backdrop-filter: blur(24px) saturate(1.3);
+  border-left: 1px solid var(--vw-line);
+  animation: panelIn .3s var(--e) both;
+}
+@keyframes panelIn { from { transform: translateX(100%); } }
+
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 12px 14px 18px;
+  border-bottom: 1px solid var(--vw-line);
+}
+.panel-head b { font-size: 13px; font-weight: 600; letter-spacing: .04em; }
+.panel-head .icon-btn { color: var(--vw-ink-2); }
+.panel-head .icon-btn:hover { background: rgba(255,255,255,.1); color: var(--vw-ink); }
+
+.panel-body { flex: 1; overflow-y: auto; padding: 6px 18px 26px; }
+.panel-sec { padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, .06); }
+.panel-sec:last-child { border-bottom: 0; }
+.panel-sec h5 {
+  font-size: 10px; font-weight: 600; letter-spacing: .14em;
+  color: rgba(242, 243, 246, .35);
+  text-transform: uppercase; margin-bottom: 10px;
+}
+.panel-kv { display: grid; grid-template-columns: 76px 1fr; gap: 7px 12px; font-size: 12px; }
+.panel-kv dt { color: var(--vw-ink-2); }
+.panel-kv dd { color: var(--vw-ink); word-break: break-all; }
+
+/* 相机三要素做成一排大字，是看图时最想知道的东西 */
+.exposure {
+  display: flex; gap: 6px; margin-top: 2px;
+}
+.exposure div {
+  flex: 1; padding: 9px 6px;
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, .05);
+  text-align: center;
+}
+.exposure b {
+  display: block; font-size: 14px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.exposure span {
+  display: block; margin-top: 2px;
+  font-size: 9.5px; letter-spacing: .1em;
+  color: rgba(242, 243, 246, .38); text-transform: uppercase;
+}
+
+@media (max-width: 720px) {
+  .viewer { --panel-w: 100%; }
+  .vw-nav { width: 40px; height: 40px; }
+  .vw-prev { left: 8px; } .vw-next { right: 8px; }
+  .vw-title span { display: none; }
+  .filmstrip { display: none; }
+}
