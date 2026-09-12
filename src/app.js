@@ -67,10 +67,18 @@ function applySettings() {
   document.documentElement.dataset.theme = s.theme;
   app.classList.toggle('side-off', !s.sidebar);
   $('#density').value = s.density;
+  syncDensityFill();
   for (const b of document.querySelectorAll('.seg-btn')) {
     b.classList.toggle('on', b.dataset.layout === s.layout);
   }
   syncSortMenu();
+}
+
+/* 滑杆左半段要跟着值走强调色，这是 Apple 滑杆的样子 */
+function syncDensityFill() {
+  const r = $('#density');
+  const pct = (r.value - r.min) / (r.max - r.min) * 100;
+  r.parentElement.style.setProperty('--fill-pct', pct + '%');
 }
 
 function syncSortMenu() {
@@ -108,6 +116,7 @@ function wireTopbar() {
 
   const dens = $('#density');
   dens.addEventListener('input', () => {
+    syncDensityFill();
     patchSettings({ density: +dens.value }, { relayout: false });
     grid.relayout();
     persist();
@@ -506,6 +515,7 @@ function stepDensity(d) {
   const input = $('#density');
   const v = clamp(store.settings.density + d, +input.min, +input.max);
   input.value = v;
+  syncDensityFill();
   patchSettings({ density: v }, { relayout: false });
   grid.relayout();
   persist();

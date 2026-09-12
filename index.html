@@ -4,8 +4,10 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark light" />
+<meta name="theme-color" content="#1c1c1e" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 <title>静照 · 本地相册</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237c9cff'/%3E%3Ccircle cx='21.5' cy='11' r='3.6' fill='%230a0b0d'/%3E%3Cpath d='M3 26.5l7.5-8.5 5 4.2 4.2-3.2L29 26.5z' fill='%230a0b0d'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a84ff'/%3E%3Ccircle cx='21.5' cy='11' r='3.6' fill='%23ffffff'/%3E%3Cpath d='M3 26.5l7.5-8.5 5 4.2 4.2-3.2L29 26.5z' fill='%23ffffff'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="styles/base.css" />
 <link rel="stylesheet" href="styles/shell.css" />
 <link rel="stylesheet" href="styles/grid.css" />
@@ -65,6 +67,7 @@
 
     <div class="topbar-right">
       <div class="seg" role="group" aria-label="排布方式">
+        <span class="seg-thumb" aria-hidden="true"></span>
         <button class="seg-btn" data-layout="justified" title="自适应排布"><svg><use href="#i-justified"/></svg></button>
         <button class="seg-btn" data-layout="square" title="方格排布"><svg><use href="#i-grid"/></svg></button>
       </div>
@@ -72,6 +75,8 @@
       <label class="density" title="缩略图大小">
         <input id="density" type="range" min="120" max="400" step="4" aria-label="缩略图大小" />
       </label>
+
+      <span class="bar-sep" aria-hidden="true"></span>
 
       <div class="pop-host">
         <button class="icon-btn" id="btnSort" title="排序与分组" aria-haspopup="menu"><svg><use href="#i-sort"/></svg></button>
@@ -93,6 +98,8 @@
           <button class="pop-item" data-group="folder">按文件夹<svg><use href="#i-check"/></svg></button>
         </div>
       </div>
+
+      <span class="bar-sep" aria-hidden="true"></span>
 
       <button class="icon-btn" id="btnTheme" title="切换明暗 ( T )" aria-label="切换明暗"><svg class="ico-dark"><use href="#i-moon"/></svg><svg class="ico-light"><use href="#i-sun"/></svg></button>
       <button class="icon-btn" id="btnHelp" title="快捷键 ( ? )" aria-label="快捷键"><svg><use href="#i-keyboard"/></svg></button>
@@ -231,7 +238,7 @@ if (location.protocol === 'file:') {
     document.getElementById('app').innerHTML =
       '<div style="display:grid;place-items:center;height:100dvh;padding:24px;text-align:center;grid-column:1/-1;grid-row:1/-1">' +
       '<div style="max-width:430px"><h2 style="font-size:20px;margin-bottom:12px">请通过 start.bat 打开</h2>' +
-      '<p style="font-size:13.5px;line-height:1.8;color:#9aa1ac">静照用到了 ES 模块、Web Worker 和本地缓存，' +
+      '<p style="font-size:13.5px;line-height:1.8;color:rgba(235,235,245,.6)">静照用到了 ES 模块、Web Worker 和本地缓存，' +
       '浏览器不允许在 <code>file://</code> 下使用它们。<br>双击目录里的 <b>start.bat</b>，' +
       '它会起一个本地服务并自动打开页面。</p></div></div>';
   });

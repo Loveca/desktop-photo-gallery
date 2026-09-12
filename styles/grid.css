@@ -10,53 +10,65 @@
 
 /* ---------------- 分组标题 ---------------- */
 .sec {
-  display: flex; align-items: flex-end; gap: 10px;
+  display: flex; align-items: baseline; gap: 10px;
   padding-bottom: 12px;
 }
 .sec-label {
-  font-size: 15px; font-weight: 600; letter-spacing: .01em;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+               "Segoe UI Variable Display", "Segoe UI",
+               "PingFang SC", "Microsoft YaHei UI", sans-serif;
+  font-size: 17px; font-weight: 620; letter-spacing: -.022em;
   color: var(--text);
 }
-.sec-sub { font-size: 11.5px; color: var(--text-3); padding-bottom: 2px; }
-.sec-rule { flex: 1; height: 1px; background: var(--line); margin-bottom: 6px; }
+.sec-sub { font-size: 12px; font-weight: 400; color: var(--text-2); }
+.sec-rule {
+  flex: 1; height: .5px; align-self: center; margin-top: 2px;
+  background: linear-gradient(90deg, var(--line), transparent 72%);
+}
 
 /* ---------------- 照片格 ---------------- */
 .tile {
   position: absolute; top: 0;
   overflow: hidden;
-  border-radius: var(--r-sm);
+  border-radius: 9px;
   background: var(--elev-1);
   cursor: pointer;
   contain: strict;
-  transition: box-shadow var(--t) var(--e), transform var(--t) var(--e);
+  transition: box-shadow var(--t) var(--e-soft), transform var(--t) var(--e-out);
 }
 .tile::after {
   content: "";
   position: absolute; inset: 0;
   border-radius: inherit;
-  box-shadow: inset 0 0 0 1px var(--line);
+  box-shadow: inset 0 0 0 .5px var(--line-2);
   pointer-events: none;
-  transition: box-shadow var(--t) var(--e);
+  transition: box-shadow var(--t) var(--e-soft);
 }
 
 .tile img {
   width: 100%; height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity .32s var(--e), transform .5s var(--e);
+  transition: opacity .45s var(--e-soft), transform .6s var(--e-out);
 }
 .tile img.in { opacity: 1; }
 
-.tile:hover { transform: translateY(-2px); box-shadow: var(--sh-2); z-index: 2; }
-.tile:hover img { transform: scale(1.045); }
-.tile:hover::after { box-shadow: inset 0 0 0 1px var(--line-2); }
+.tile:hover {
+  transform: translateY(-2px) scale(1.008);
+  box-shadow: var(--sh-2);
+  z-index: 2;
+}
+.tile:hover img { transform: scale(1.055); }
+.tile:hover::after { box-shadow: inset 0 0 0 .5px var(--line-3); }
 
-.tile:active { transform: translateY(-1px) scale(.994); }
+.tile:active { transform: translateY(0) scale(.985); transition-duration: .1s; }
 
-/* 键盘选中 */
+/* 键盘选中：Apple 的选中环——强调色描边 + 外圈柔光 */
 .tile.sel { z-index: 3; }
 .tile.sel::after {
-  box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 3px var(--accent-soft);
+  box-shadow: inset 0 0 0 3px var(--accent),
+              inset 0 0 0 4px rgba(255, 255, 255, .28),
+              0 0 0 4px var(--accent-glow);
 }
 
 /* 打开动画结束后回到当前项 */
@@ -69,16 +81,16 @@
   position: absolute; inset: 0;
   background: linear-gradient(100deg,
       transparent 18%,
-      color-mix(in srgb, var(--text) 9%, transparent) 42%,
+      color-mix(in srgb, var(--text) 8%, transparent) 42%,
       transparent 66%);
   background-size: 260% 100%;
-  animation: shimmer 1.4s linear infinite;
+  animation: shimmer 1.5s linear infinite;
 }
 @keyframes shimmer { to { background-position: -260% 0; } }
 .tile:not(.load)::before { content: none; }
 
 /* 无法解码的格 */
-.tile.dead { display: grid; place-items: center; }
+.tile.dead { display: grid; place-items: center; background: var(--elev-1); }
 .tile.dead::before { content: none; }
 .tile-dead {
   display: grid; place-items: center; gap: 6px;
@@ -86,7 +98,7 @@
 }
 .tile-dead svg { width: 22px; height: 22px; }
 .tile-dead span {
-  font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+  font-size: 9.5px; font-weight: 590; letter-spacing: .1em; text-transform: uppercase;
 }
 
 /* 角标：收藏 */
@@ -96,14 +108,18 @@
   width: 26px; height: 26px;
   border-radius: 50%;
   color: #fff;
-  opacity: 0; transform: scale(.7);
-  background: rgba(10, 11, 13, .42);
-  backdrop-filter: blur(6px);
-  transition: opacity var(--t) var(--e), transform var(--t) var(--e), color var(--t-fast) var(--e);
+  opacity: 0; transform: scale(.6);
+  background: rgba(0, 0, 0, .28);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .22);
+  transition: opacity var(--t) var(--e-soft), transform var(--t) var(--e-out),
+              color var(--t-fast) var(--e-soft);
 }
-.tile-fav svg { width: 14px; height: 14px; }
+.tile-fav svg { width: 14px; height: 14px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
 .tile:hover .tile-fav { opacity: 1; transform: scale(1); }
-.tile-fav:hover { color: var(--star); }
+.tile-fav:hover { color: var(--star); transform: scale(1.12); }
+.tile-fav:active { transform: scale(.9); }
 .tile.faved .tile-fav {
   opacity: 1; transform: scale(1);
   color: var(--star);
@@ -113,22 +129,24 @@
 /* 底部文件名（仅悬停） */
 .tile-name {
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
-  padding: 22px 9px 7px;
-  font-size: 11px; color: #fff;
-  background: linear-gradient(transparent, rgba(0, 0, 0, .72));
-  opacity: 0;
+  padding: 26px 10px 8px;
+  font-size: 11px; font-weight: 500; color: #fff;
+  letter-spacing: -.005em;
+  background: linear-gradient(transparent, rgba(0, 0, 0, .1) 32%, rgba(0, 0, 0, .68));
+  opacity: 0; transform: translateY(4px);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  transition: opacity var(--t) var(--e);
+  transition: opacity var(--t) var(--e-soft), transform var(--t) var(--e-out);
   pointer-events: none;
-  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .5);
 }
-.tile:hover .tile-name { opacity: 1; }
+.tile:hover .tile-name { opacity: 1; transform: translateY(0); }
 
 /* 密度很小时收掉装饰，避免视觉噪音 */
+.canvas.tiny .tile { border-radius: 6px; }
 .canvas.tiny .tile-name { display: none; }
-.canvas.tiny .tile-fav { width: 22px; height: 22px; top: 4px; right: 4px; }
-.canvas.tiny .tile-fav svg { width: 12px; height: 12px; }
+.canvas.tiny .tile-fav { width: 21px; height: 21px; top: 4px; right: 4px; }
+.canvas.tiny .tile-fav svg { width: 11px; height: 11px; }
 
 /* 首屏行的轻微入场 */
-.row.fresh .tile { animation: tileIn .42s var(--e) both; }
-@keyframes tileIn { from { opacity: 0; transform: translateY(8px); } }
+.row.fresh .tile { animation: tileIn .55s var(--e-out) both; }
+@keyframes tileIn { from { opacity: 0; transform: translateY(10px) scale(.97); } }

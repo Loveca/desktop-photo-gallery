@@ -1,41 +1,43 @@
 /* ============================================================
    静照 · 沉浸式查看器
    舞台恒为暗色（无论明暗主题），让照片自己发声。
-   UI 闲置 2.5s 后淡出，移动鼠标即回。
+   控件收在毛玻璃胶囊里，闲置 2.5s 后淡出，移动鼠标即回。
    ============================================================ */
 
 .viewer {
   position: fixed; inset: 0; z-index: 200;
-  --stage-bg: #07080a;
-  --vw-ink: #f2f3f6;
-  --vw-ink-2: rgba(242, 243, 246, .58);
-  --vw-glass: rgba(18, 20, 24, .52);
-  --vw-line: rgba(255, 255, 255, .12);
+  --stage-bg: #000000;
+  --vw-ink: #ffffff;
+  --vw-ink-2: rgba(235, 235, 245, .60);
+  --vw-ink-3: rgba(235, 235, 245, .32);
+  --vw-glass: rgba(38, 38, 42, .58);
+  --vw-glass-blur: blur(26px) saturate(180%);
+  --vw-line: rgba(255, 255, 255, .13);
   background: var(--stage-bg);
   color: var(--vw-ink);
   overflow: hidden;
-  animation: vwIn .26s var(--e) both;
+  animation: vwIn .34s var(--e-out) both;
   user-select: none;
 }
-.viewer.closing { animation: vwOut .18s var(--e-in) both; }
-@keyframes vwIn  { from { opacity: 0; } }
-@keyframes vwOut { to   { opacity: 0; } }
+.viewer.closing { animation: vwOut .2s var(--e-in) both; }
+@keyframes vwIn  { from { opacity: 0; transform: scale(1.012); } }
+@keyframes vwOut { to   { opacity: 0; transform: scale(1.008); } }
 
 /* 环境底：当前照片的缩略图放大后重度模糊，像展墙上的余光 */
 .vw-ambient {
   position: absolute; inset: -12%;
   background-size: cover; background-position: center;
-  filter: blur(64px) saturate(1.25) brightness(.5);
-  opacity: .38;
+  filter: blur(72px) saturate(1.5) brightness(.46);
+  opacity: .42;
   transform: scale(1.1);
-  transition: opacity .5s var(--e), background-image .5s var(--e);
+  transition: opacity .6s var(--e-soft), background-image .6s var(--e-soft);
   pointer-events: none;
 }
 .vw-ambient::after {
   content: "";
   position: absolute; inset: 0;
   background: radial-gradient(ellipse at center,
-      transparent 24%, rgba(0, 0, 0, .62) 100%);
+      transparent 22%, rgba(0, 0, 0, .68) 100%);
 }
 .viewer.no-ambient .vw-ambient { opacity: 0; }
 
@@ -58,8 +60,9 @@
 .vw-frame img {
   display: block;
   max-width: none;
-  box-shadow: 0 30px 90px rgba(0, 0, 0, .6);
-  background: rgba(255,255,255,.02);
+  border-radius: 2px;
+  box-shadow: 0 40px 110px rgba(0, 0, 0, .72), 0 4px 20px rgba(0, 0, 0, .4);
+  background: rgba(255, 255, 255, .02);
 }
 
 /* 切换时的交叉淡入 */
@@ -67,11 +70,11 @@
   position: absolute; top: 0; left: 0;
   transform-origin: 0 0;
   pointer-events: none;
-  animation: ghostOut .34s var(--e) both;
+  animation: ghostOut .4s var(--e-soft) both;
 }
-.vw-ghost img { display: block; box-shadow: 0 30px 90px rgba(0,0,0,.6); }
+.vw-ghost img { display: block; border-radius: 2px; box-shadow: 0 40px 110px rgba(0, 0, 0, .72); }
 @keyframes ghostOut { to { opacity: 0; } }
-.vw-frame img.fresh { animation: freshIn .34s var(--e) both; }
+.vw-frame img.fresh { animation: freshIn .4s var(--e-soft) both; }
 @keyframes freshIn { from { opacity: 0; } }
 
 .vw-fail {
@@ -80,15 +83,15 @@
   color: var(--vw-ink-2); text-align: center;
 }
 .vw-fail svg { width: 42px; height: 42px; }
-.vw-fail p { font-size: 14px; }
-.vw-fail small { font-size: 11.5px; color: rgba(242,243,246,.35); }
+.vw-fail p { font-size: 15px; font-weight: 500; }
+.vw-fail small { font-size: 11.5px; color: var(--vw-ink-3); }
 
 /* ---------------- 控件层 ---------------- */
 .vw-chrome {
   position: absolute; inset: 0;
   pointer-events: none;
   opacity: 1;
-  transition: opacity .4s var(--e);
+  transition: opacity .45s var(--e-soft);
 }
 .vw-chrome > * { pointer-events: auto; }
 .viewer.idle .vw-chrome { opacity: 0; pointer-events: none; }
@@ -97,37 +100,52 @@
 .vw-top {
   position: absolute; top: 0; left: 0; right: 0;
   display: flex; align-items: center; gap: 16px;
-  padding: 14px 16px 30px;
-  background: linear-gradient(rgba(0, 0, 0, .55), transparent);
-  transition: transform .4s var(--e);
+  padding: 13px 15px 34px;
+  background: linear-gradient(rgba(0, 0, 0, .5), rgba(0, 0, 0, .16) 55%, transparent);
+  transition: transform .45s var(--e-out);
 }
-.viewer.idle .vw-top { transform: translateY(-8px); }
+.viewer.idle .vw-top { transform: translateY(-10px); }
 /* 信息面板压在最上层，顶栏要让位，否则关闭/收藏都点不到 */
 .viewer.panel-open .vw-top { right: var(--panel-w); }
 
-.vw-title { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.vw-title { min-width: 0; display: flex; flex-direction: column; gap: 1px; padding-left: 4px; }
 .vw-title b {
-  font-size: 13.5px; font-weight: 500;
+  font-size: 14px; font-weight: 590; letter-spacing: -.014em;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .45);
 }
 .vw-title span {
-  font-size: 11px; color: var(--vw-ink-2);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-
-.vw-tools { display: flex; align-items: center; gap: 4px; margin-left: auto; }
-.vw-index {
-  margin-right: 8px; padding: 3px 10px;
-  border-radius: var(--r-pill);
-  background: var(--vw-glass); border: 1px solid var(--vw-line);
-  backdrop-filter: blur(10px);
   font-size: 11.5px; color: var(--vw-ink-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .4);
 }
-.vw-tools .icon-btn { color: var(--vw-ink-2); }
-.vw-tools .icon-btn:hover { background: rgba(255, 255, 255, .1); color: var(--vw-ink); }
-.vw-tools .icon-btn.on { background: rgba(255, 255, 255, .14); color: var(--vw-ink); }
 
-#vwFav.on { color: var(--star); background: transparent; }
+/* 工具簇：一整枚毛玻璃胶囊 */
+.vw-tools {
+  display: flex; align-items: center; gap: 2px;
+  margin-left: auto; padding: 3px 4px;
+  border-radius: var(--r-pill);
+  background: var(--vw-glass);
+  -webkit-backdrop-filter: var(--vw-glass-blur);
+  backdrop-filter: var(--vw-glass-blur);
+  box-shadow: inset 0 0 0 .5px var(--vw-line), 0 2px 12px rgba(0, 0, 0, .28);
+}
+.vw-index {
+  margin: 0 8px 0 8px; padding: 0;
+  font-size: 11.5px; font-weight: 500; color: var(--vw-ink-2);
+  white-space: nowrap;
+}
+.vw-index::after {
+  content: ""; display: inline-block; vertical-align: middle;
+  width: .5px; height: 14px; margin-left: 9px;
+  background: var(--vw-line);
+}
+.vw-tools .icon-btn { color: var(--vw-ink-2); width: 28px; height: 28px; border-radius: 50%; }
+.vw-tools .icon-btn:hover { background: rgba(255, 255, 255, .14); color: var(--vw-ink); }
+.vw-tools .icon-btn:active { background: rgba(255, 255, 255, .2); }
+.vw-tools .icon-btn.on { background: rgba(255, 255, 255, .16); color: var(--vw-ink); }
+
+#vwFav.on { color: var(--star); background: rgba(255, 214, 10, .16); }
 #vwFav.on svg { fill: var(--star); stroke: none; }
 #vwSlide .ico-pause, #vwFull .ico-shr { display: none; }
 .viewer.playing #vwSlide .ico-play  { display: none; }
@@ -139,99 +157,109 @@
 .vw-nav {
   position: absolute; top: 50%; z-index: 3;
   display: grid; place-items: center;
-  width: 46px; height: 46px;
+  width: 44px; height: 44px;
   transform: translateY(-50%);
   border-radius: 50%;
   background: var(--vw-glass);
-  border: 1px solid var(--vw-line);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: var(--vw-glass-blur);
+  backdrop-filter: var(--vw-glass-blur);
+  box-shadow: inset 0 0 0 .5px var(--vw-line), 0 2px 14px rgba(0, 0, 0, .3);
   color: var(--vw-ink-2);
-  transition: background var(--t) var(--e), color var(--t) var(--e),
-              transform var(--t) var(--e), opacity var(--t) var(--e);
+  transition: background var(--t) var(--e-soft), color var(--t) var(--e-soft),
+              transform var(--t) var(--e-out), opacity var(--t) var(--e-soft);
 }
-.vw-nav svg { width: 20px; height: 20px; }
-.vw-nav:hover { background: rgba(255, 255, 255, .16); color: var(--vw-ink); }
-.vw-prev { left: 18px; }
-.vw-next { right: 18px; }
-.vw-prev:hover { transform: translateY(-50%) translateX(-2px); }
-.vw-next:hover { transform: translateY(-50%) translateX(2px); }
-.vw-nav[disabled] { opacity: .22; pointer-events: none; }
-.viewer.panel-open .vw-next { right: calc(var(--panel-w) + 18px); }
+.vw-nav svg { width: 19px; height: 19px; stroke-width: 1.9; }
+.vw-nav:hover { background: rgba(255, 255, 255, .2); color: var(--vw-ink); }
+.vw-prev { left: 20px; }
+.vw-next { right: 20px; }
+.vw-prev:hover { transform: translateY(-50%) translateX(-3px) scale(1.05); }
+.vw-next:hover { transform: translateY(-50%) translateX(3px) scale(1.05); }
+.vw-prev:active { transform: translateY(-50%) translateX(-3px) scale(.94); }
+.vw-next:active { transform: translateY(-50%) translateX(3px) scale(.94); }
+.vw-nav[disabled] { opacity: .18; pointer-events: none; }
+.viewer.panel-open .vw-next { right: calc(var(--panel-w) + 20px); }
 
 /* 底部 */
 .vw-bottom {
   position: absolute; left: 0; right: 0; bottom: 0;
-  display: flex; flex-direction: column; align-items: center; gap: 10px;
-  padding: 40px 16px 14px;
-  background: linear-gradient(transparent, rgba(0, 0, 0, .6));
-  transition: transform .4s var(--e);
+  display: flex; flex-direction: column; align-items: center; gap: 11px;
+  padding: 44px 16px 15px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, .2) 45%, rgba(0, 0, 0, .58));
+  transition: transform .45s var(--e-out);
 }
-.viewer.idle .vw-bottom { transform: translateY(10px); }
+.viewer.idle .vw-bottom { transform: translateY(12px); }
 .viewer.panel-open .vw-bottom { right: var(--panel-w); }
 
 .vw-zoom {
-  display: flex; align-items: center; gap: 2px;
-  padding: 3px;
+  display: flex; align-items: center; gap: 1px;
+  padding: 3px 4px;
   border-radius: var(--r-pill);
   background: var(--vw-glass);
-  border: 1px solid var(--vw-line);
-  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: var(--vw-glass-blur);
+  backdrop-filter: var(--vw-glass-blur);
+  box-shadow: inset 0 0 0 .5px var(--vw-line), 0 2px 12px rgba(0, 0, 0, .28);
 }
-.vw-zoom .icon-btn { color: var(--vw-ink-2); }
-.vw-zoom .icon-btn:hover { background: rgba(255, 255, 255, .12); color: var(--vw-ink); }
+.vw-zoom .icon-btn { color: var(--vw-ink-2); width: 26px; height: 26px; border-radius: 50%; }
+.vw-zoom .icon-btn:hover { background: rgba(255, 255, 255, .14); color: var(--vw-ink); }
 .zoom-val {
-  min-width: 54px; padding: 0 4px;
-  font-size: 11.5px; color: var(--vw-ink-2);
+  min-width: 52px; padding: 0 4px;
+  font-size: 11.5px; font-weight: 500; color: var(--vw-ink-2);
   font-variant-numeric: tabular-nums;
-  transition: color var(--t-fast) var(--e);
+  border-radius: var(--r-pill);
+  transition: color var(--t-fast) var(--e-soft), background var(--t-fast) var(--e-soft);
 }
-.zoom-val:hover { color: var(--vw-ink); }
+.zoom-val:hover { color: var(--vw-ink); background: rgba(255, 255, 255, .1); }
 
 /* 胶片条 */
 .filmstrip {
   width: 100%; max-width: 100%;
   overflow-x: auto; overflow-y: hidden;
   scrollbar-width: none;
-  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
-  transition: opacity var(--t) var(--e);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  transition: opacity var(--t) var(--e-soft);
 }
 .filmstrip::-webkit-scrollbar { display: none; }
 .film-track {
   display: flex; gap: 5px;
-  padding: 3px 50%;
+  padding: 4px 50%;
   width: max-content;
 }
 .film-cell {
   position: relative;
-  width: 52px; height: 52px; flex: none;
-  border-radius: 5px; overflow: hidden;
-  background: rgba(255, 255, 255, .05);
-  opacity: .42;
-  transform: scale(.9);
-  transition: opacity var(--t) var(--e), transform var(--t) var(--e), box-shadow var(--t) var(--e);
+  width: 50px; height: 50px; flex: none;
+  border-radius: 6px; overflow: hidden;
+  background: rgba(255, 255, 255, .06);
+  opacity: .45;
+  transform: scale(.88);
+  cursor: pointer;
+  transition: opacity var(--t) var(--e-soft), transform var(--t) var(--e-out),
+              box-shadow var(--t) var(--e-soft);
 }
 .film-cell img { width: 100%; height: 100%; object-fit: cover; }
-.film-cell:hover { opacity: .8; transform: scale(.97); }
+.film-cell:hover { opacity: .85; transform: scale(.96); }
 .film-cell.on {
-  opacity: 1; transform: scale(1);
-  box-shadow: 0 0 0 2px var(--vw-ink);
+  opacity: 1; transform: scale(1.04);
+  box-shadow: 0 0 0 2px var(--vw-ink), 0 4px 14px rgba(0, 0, 0, .5);
 }
 .film-cell.fav::after {
   content: ""; position: absolute; right: 4px; top: 4px;
   width: 5px; height: 5px; border-radius: 50%; background: var(--star);
+  box-shadow: 0 0 4px rgba(0, 0, 0, .6);
 }
 
 /* 幻灯片进度 */
 .vw-slideprog {
   position: absolute; left: 0; right: 0; bottom: 0;
-  height: 2px; opacity: 0;
-  transition: opacity var(--t) var(--e);
+  height: 2.5px; opacity: 0;
+  transition: opacity var(--t) var(--e-soft);
 }
 .viewer.playing .vw-slideprog { opacity: 1; }
 .vw-slideprog i {
   display: block; height: 100%; width: 0;
+  border-radius: 0 var(--r-pill) var(--r-pill) 0;
   background: var(--vw-ink);
-  opacity: .8;
+  opacity: .85;
 }
 
 /* 幻灯片：缓慢推移，是沉浸感的主要来源。
@@ -246,36 +274,37 @@
 }
 
 /* ---------------- 信息面板 ---------------- */
-.viewer { --panel-w: 300px; }
+.viewer { --panel-w: 316px; }
 .vw-panel {
   position: absolute; top: 0; right: 0; bottom: 0; z-index: 5;
   width: var(--panel-w);
   display: flex; flex-direction: column;
-  background: rgba(14, 16, 19, .82);
-  backdrop-filter: blur(24px) saturate(1.3);
-  border-left: 1px solid var(--vw-line);
-  animation: panelIn .3s var(--e) both;
+  background: rgba(28, 28, 30, .74);
+  -webkit-backdrop-filter: blur(34px) saturate(180%);
+  backdrop-filter: blur(34px) saturate(180%);
+  box-shadow: inset .5px 0 0 var(--vw-line), -14px 0 40px rgba(0, 0, 0, .34);
+  animation: panelIn .42s var(--e-out) both;
 }
 @keyframes panelIn { from { transform: translateX(100%); } }
 
 .panel-head {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 14px 12px 14px 18px;
-  border-bottom: 1px solid var(--vw-line);
+  padding: 14px 12px 13px 20px;
+  border-bottom: .5px solid var(--vw-line);
 }
-.panel-head b { font-size: 13px; font-weight: 600; letter-spacing: .04em; }
-.panel-head .icon-btn { color: var(--vw-ink-2); }
-.panel-head .icon-btn:hover { background: rgba(255,255,255,.1); color: var(--vw-ink); }
+.panel-head b { font-size: 14px; font-weight: 620; letter-spacing: -.014em; }
+.panel-head .icon-btn { color: var(--vw-ink-2); border-radius: 50%; }
+.panel-head .icon-btn:hover { background: rgba(255, 255, 255, .12); color: var(--vw-ink); }
 
-.panel-body { flex: 1; overflow-y: auto; padding: 6px 18px 26px; }
-.panel-sec { padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, .06); }
+.panel-body { flex: 1; overflow-y: auto; padding: 4px 20px 28px; }
+.panel-sec { padding: 15px 0; border-bottom: .5px solid rgba(255, 255, 255, .07); }
 .panel-sec:last-child { border-bottom: 0; }
 .panel-sec h5 {
-  font-size: 10px; font-weight: 600; letter-spacing: .14em;
-  color: rgba(242, 243, 246, .35);
-  text-transform: uppercase; margin-bottom: 10px;
+  font-size: 10.5px; font-weight: 590; letter-spacing: .07em;
+  color: var(--vw-ink-3);
+  text-transform: uppercase; margin-bottom: 11px;
 }
-.panel-kv { display: grid; grid-template-columns: 76px 1fr; gap: 7px 12px; font-size: 12px; }
+.panel-kv { display: grid; grid-template-columns: 74px 1fr; gap: 8px 12px; font-size: 12.5px; }
 .panel-kv dt { color: var(--vw-ink-2); }
 .panel-kv dd { color: var(--vw-ink); word-break: break-all; }
 
@@ -284,24 +313,25 @@
   display: flex; gap: 6px; margin-top: 2px;
 }
 .exposure div {
-  flex: 1; padding: 9px 6px;
-  border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, .05);
+  flex: 1; padding: 10px 6px;
+  border-radius: var(--r);
+  background: rgba(255, 255, 255, .07);
+  box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .06);
   text-align: center;
 }
 .exposure b {
-  display: block; font-size: 14px; font-weight: 600;
+  display: block; font-size: 15px; font-weight: 620; letter-spacing: -.018em;
   font-variant-numeric: tabular-nums;
 }
 .exposure span {
-  display: block; margin-top: 2px;
-  font-size: 9.5px; letter-spacing: .1em;
-  color: rgba(242, 243, 246, .38); text-transform: uppercase;
+  display: block; margin-top: 3px;
+  font-size: 9.5px; font-weight: 500; letter-spacing: .07em;
+  color: var(--vw-ink-3); text-transform: uppercase;
 }
 
 @media (max-width: 720px) {
   .viewer { --panel-w: 100%; }
-  .vw-nav { width: 40px; height: 40px; }
+  .vw-nav { width: 38px; height: 38px; }
   .vw-prev { left: 8px; } .vw-next { right: 8px; }
   .vw-title span { display: none; }
   .filmstrip { display: none; }
