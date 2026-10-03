@@ -88,6 +88,7 @@ export function createViewer({ onIndexChange }) {
   }
 
   function zoomTo(next, cx, cy) {
+    if (isVideo()) return;          // 视频不参与缩放，控件是原生系统的
     const b = stageBox();
     const min = fitScale * 0.6;
     const max = Math.max(8, fitScale * 6);
@@ -167,6 +168,7 @@ export function createViewer({ onIndexChange }) {
   const isVideo = () => photo?.type === 'video';
 
   function hideVideo() {
+    root.classList.remove('is-video');
     if (vid.hidden && !vid.src) return;
     vid.pause?.();
     vid.removeAttribute('src');
@@ -174,25 +176,28 @@ export function createViewer({ onIndexChange }) {
     vid.hidden = true;
   }
 
-  /** 视频帧尺寸 / 播放。视频宽高到达后套用与图片同一套 fit 数学 */
+  /** 视频：铺满舞台（CSS 负责 contain），尺寸 / 声音都在元素上处理 */
   function showVideo(url, my) {
     img.hidden = true;
     fail.hidden = true;
+    root.classList.add('is-video');
     vid.hidden = false;
     vid.src = url;
+    // 每次都先尝试带声播放。之前用的是「失败后置静音」，
+    // 那个 muted 会留在元素上，导致之后每一个视频都闷着。
+    vid.muted = false;
     vid.onloadedmetadata = () => {
       if (my !== token) return;
       nw = vid.videoWidth || photo.w || 16;
       nh = vid.videoHeight || photo.h || 9;
-      computeFit();
-      centerAtFit();
     };
     vid.onerror = () => { if (my === token) showFail(); };
     vid.onended = () => { if (my === token && playing) show(index + 1, 1); };
-    // 有用户手势在手，先带声播；被浏览器拦就静音播
-    vid.play?.().catch(() => {
+    // 自动播放被浏览器策略拦下时才退而静音，控件里点一下就能开声
+    const p = vid.play?.();
+    p?.catch?.(() => {
       vid.muted = true;
-      vid.play?.().catch(() => {});
+      vid.play?.().catch?.(() => {});
     });
     preload(dir);
     if (playing) armSlide();
@@ -603,6 +608,7 @@ export function createViewer({ onIndexChange }) {
     }
     else if (k === 'i' || k === 'I') { togglePanel(); }
     else if (k === 's' || k === 'S') { $('#vwFav').click(); }
+    else if (k === 'm' || k === 'M') { if (isVideo()) vid.muted = !vid.muted; }
     else if (k === 'f' || k === 'F') { toggleFullscreen(); }
     else if (k === '0')      { centerAtFit(); }
     else if (k === '+' || k === '=') { zoomTo(scale * 1.4); }
