@@ -88,6 +88,15 @@ export function fmtAperture(f) {
 
 export const ext = (name) => (name.split('.').pop() || '').toLowerCase();
 
+/** 视频时长：78 -> "1:18"，3671 -> "1:01:11" */
+export function fmtDur(sec) {
+  if (!sec || !Number.isFinite(sec) || sec < 0) return null;
+  const s = Math.round(sec);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+  const mm = h ? String(m).padStart(2, '0') : m;
+  return `${h ? h + ':' : ''}${mm}:${String(ss).padStart(2, '0')}`;
+}
+
 export const baseName = (path) => path.slice(path.lastIndexOf('/') + 1);
 export const dirName  = (path) => {
   const i = path.lastIndexOf('/');

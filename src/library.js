@@ -13,13 +13,19 @@ export const IMAGE_EXT = new Set([
   'bmp', 'tif', 'tiff', 'heic', 'heif',
 ]);
 
+export const VIDEO_EXT = new Set([
+  'mp4', 'm4v', 'webm', 'mov', 'ogv', 'mkv', 'avi', 'mpg', 'mpeg', '3gp',
+]);
+
+const MEDIA_EXT = new Set([...IMAGE_EXT, ...VIDEO_EXT]);
+
 const SKIP_DIR = new Set([
   'node_modules', '.git', '.svn', '@eadir', '.thumbnails',
   '$recycle.bin', 'system volume information', '.trash', '.ds_store',
 ]);
 
-export const isImageName = (name) =>
-  !name.startsWith('._') && !name.startsWith('.') && IMAGE_EXT.has(ext(name));
+export const isMediaName = (name) =>
+  !name.startsWith('._') && !name.startsWith('.') && MEDIA_EXT.has(ext(name));
 
 const skipDir = (name) => name.startsWith('.') || SKIP_DIR.has(name.toLowerCase());
 
@@ -57,6 +63,7 @@ function makePhoto({ name, path, file, handle, size, mtime }) {
     dir: dirName(path),
     size,
     mtime,
+    type: VIDEO_EXT.has(ext(name)) ? 'video' : 'image',
     file: file || null,
     handle: handle || null,
     meta: null,
@@ -88,7 +95,7 @@ export async function scanHandle(root, onProgress, signal) {
         if (signal?.aborted) break;
         if (h.kind === 'directory') {
           if (!skipDir(name)) stack.push({ handle: h, prefix: prefix ? `${prefix}/${name}` : name });
-        } else if (isImageName(name)) {
+        } else if (isMediaName(name)) {
           files.push([name, h]);
         }
       }
@@ -124,7 +131,7 @@ export async function scanHandle(root, onProgress, signal) {
 export function fromFiles(fileList) {
   const out = [];
   for (const f of fileList) {
-    if (!isImageName(f.name)) continue;
+    if (!isMediaName(f.name)) continue;
     // webkitRelativePath 形如 "相册/2024/a.jpg"，去掉最外层目录名和路径保持一致
     const rel = f.webkitRelativePath || f.name;
     const cut = rel.indexOf('/');
@@ -152,7 +159,7 @@ export function rootNameOfFiles(fileList) {
 
 async function walkEntry(entry, prefix, out) {
   if (entry.isFile) {
-    if (!isImageName(entry.name)) return;
+    if (!isMediaName(entry.name)) return;
     const file = await new Promise((res, rej) => entry.file(res, rej)).catch(() => null);
     if (!file) return;
     const path = prefix ? `${prefix}/${entry.name}` : entry.name;
@@ -189,7 +196,7 @@ export async function fromDrop(dataTransfer, onProgress) {
     if (files.length) {
       const photos = [];
       for (const h of files) {
-        if (!isImageName(h.name)) continue;
+        if (!isMediaName(h.name)) continue;
         try {
           const f = await h.getFile();
           photos.push(makePhoto({ name: h.name, path: h.name, handle: h, file: f, size: f.size, mtime: f.lastModified }));

@@ -115,6 +115,80 @@ async function mainThumb(file, box) {
   return { blob, w, h, tw, th };
 }
 
+/* ---------------- 视频主线程处理 ----------------
+   Worker 里没有 <video>，元数据和缩略图都得在主线程做。
+   元数据：loadedmetadata 拿宽高 + 时长
+   缩略图：seek 到 10% 处（且不超过 1s）截一帧 */
+const VIDEO_PROBE_TIMEOUT = 8000;
+
+function withVideoMeta(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement('video');
+    v.preload = 'metadata'; v.muted = true;
+    const timer = setTimeout(() => { cleanup(); reject(new Error('video meta timeout')); }, VIDEO_PROBE_TIMEOUT);
+    const cleanup = () => {
+      clearTimeout(timer);
+      v.removeAttribute('src'); v.load?.();
+      URL.revokeObjectURL(url);
+    };
+    v.onloadedmetadata = () => {
+      const meta = {
+        w: v.videoWidth || 0, h: v.videoHeight || 0,
+        duration: Number.isFinite(v.duration) ? v.duration : 0,
+      };
+      cleanup(); resolve(meta);
+    };
+    v.onerror = () => { cleanup(); reject(new Error('video decode failed')); };
+    v.src = url;
+  });
+}
+
+async function videoProbe(file) {
+  const m = await withVideoMeta(file);
+  return { rawW: m.w, rawH: m.h, w: m.w, h: m.h, orientation: 1, taken: 0, duration: m.duration };
+}
+
+async function videoThumb(file, box) {
+  const url = URL.createObjectURL(file);
+  const v = document.createElement('video');
+  v.preload = 'auto'; v.muted = true; v.playsInline = true;
+  try {
+    await new Promise((res, rej) => {
+      const timer = setTimeout(() => rej(new Error('thumb timeout')), VIDEO_PROBE_TIMEOUT);
+      v.onloadeddata = () => { clearTimeout(timer); res(); };
+      v.onerror = () => { clearTimeout(timer); rej(new Error('decode failed')); };
+      v.src = url;
+    });
+    const dur = Number.isFinite(v.duration) ? v.duration : 0;
+    const t = dur > 0 ? Math.min(Math.max(dur * 0.1, 0.1), 1) : 0;
+    if (t > 0) {
+      await new Promise((res, rej) => {
+        const timer = setTimeout(() => rej(new Error('seek timeout')), VIDEO_PROBE_TIMEOUT);
+        v.onseeked = () => { clearTimeout(timer); res(); };
+        v.onerror = () => { clearTimeout(timer); rej(new Error('seek failed')); };
+        v.currentTime = t;
+      });
+    }
+    const w = v.videoWidth, h = v.videoHeight;
+    if (!w || !h) throw new Error('no video track');
+    const k = Math.min(1, box / Math.max(w, h));
+    const tw = Math.max(1, Math.round(w * k));
+    const th = Math.max(1, Math.round(h * k));
+    const cv = document.createElement('canvas');
+    cv.width = tw; cv.height = th;
+    const cx = cv.getContext('2d');
+    cx.imageSmoothingQuality = 'high';
+    cx.drawImage(v, 0, 0, tw, th);
+    const blob = await new Promise((res) => cv.toBlob(res, 'image/webp', 0.82));
+    if (!blob) throw new Error('empty thumb');
+    return { blob, w, h, tw, th };
+  } finally {
+    v.removeAttribute('src'); v.load?.();
+    URL.revokeObjectURL(url);
+  }
+}
+
 /* ---------------- 文件句柄 ---------------- */
 
 export async function fileOf(photo) {
@@ -195,7 +269,9 @@ export const media = {
 
       const file = await fileOf(photo);
       let r;
-      if (pool.ok) {
+      if (photo.type === 'video') {
+        r = await videoThumb(file, THUMB_BOX);
+      } else if (pool.ok) {
         r = await pool.submit({
           key: 'T' + photo.id, kind: 'thumb', file,
           box: THUMB_BOX, hint: photo.meta, prio,
@@ -267,8 +343,8 @@ export const media = {
       await Promise.all(slice.map(async (p) => {
         try {
           const file = await fileOf(p);
-          const meta = pool.ok
-            ? (await pool.submit({ key: 'P' + p.id, kind: 'probe', file, prio: 1 })).meta
+          const meta = p.type === 'video' ? await videoProbe(file)
+            : pool.ok ? (await pool.submit({ key: 'P' + p.id, kind: 'probe', file, prio: 1 })).meta
             : await mainProbe(file);
           applyMeta(p, meta);
           writeBuf.push([p.id, meta]);

@@ -6,7 +6,7 @@
 
 import { media } from './media.js';
 import { store, toggleFav } from './store.js';
-import { $, el, clamp, icon, fmtSize, fmtDate, weekdayOf, fmtShutter, fmtFocal, fmtAperture, ext } from './util.js';
+import { $, el, clamp, icon, fmtSize, fmtDate, weekdayOf, fmtShutter, fmtFocal, fmtAperture, ext, fmtDur } from './util.js';
 
 const IDLE_MS   = 2600;
 const FILM_HALF = 60;
@@ -16,6 +16,7 @@ export function createViewer({ onIndexChange }) {
   const stage  = $('#vwStage');
   const frame  = $('#vwFrame');
   const img    = $('#vwImg');
+  const vid    = $('#vwVid');
   const fail   = $('#vwFail');
   const ambient= $('#vwAmbient');
   const chrome = $('#vwChrome');
@@ -125,6 +126,10 @@ export function createViewer({ onIndexChange }) {
     catch { return showFail(); }
     if (my !== token) return;
 
+    // 视频走独立的播放路径
+    if (photo.type === 'video') return showVideo(url, my);
+
+    hideVideo();
     const ghost = spawnGhost();
     const probe = new Image();
     probe.decoding = 'async';
@@ -157,6 +162,42 @@ export function createViewer({ onIndexChange }) {
     if (playing) armSlide();
   }
 
+  /* ---------------- 视频 ---------------- */
+
+  const isVideo = () => photo?.type === 'video';
+
+  function hideVideo() {
+    if (vid.hidden && !vid.src) return;
+    vid.pause?.();
+    vid.removeAttribute('src');
+    vid.load?.();
+    vid.hidden = true;
+  }
+
+  /** 视频帧尺寸 / 播放。视频宽高到达后套用与图片同一套 fit 数学 */
+  function showVideo(url, my) {
+    img.hidden = true;
+    fail.hidden = true;
+    vid.hidden = false;
+    vid.src = url;
+    vid.onloadedmetadata = () => {
+      if (my !== token) return;
+      nw = vid.videoWidth || photo.w || 16;
+      nh = vid.videoHeight || photo.h || 9;
+      computeFit();
+      centerAtFit();
+    };
+    vid.onerror = () => { if (my === token) showFail(); };
+    vid.onended = () => { if (my === token && playing) show(index + 1, 1); };
+    // 有用户手势在手，先带声播；被浏览器拦就静音播
+    vid.play?.().catch(() => {
+      vid.muted = true;
+      vid.play?.().catch(() => {});
+    });
+    preload(dir);
+    if (playing) armSlide();
+  }
+
   function spawnGhost() {
     if (!img.src || img.hidden) return null;
     const wrap = el('div', 'vw-ghost');
@@ -174,6 +215,7 @@ export function createViewer({ onIndexChange }) {
 
   function showFail() {
     img.hidden = true;
+    hideVideo();
     fail.hidden = false;
     $('#vwFailName').textContent = `${photo?.name || ''} · ${ext(photo?.name || '').toUpperCase()}`;
     if (photo) photo.dead = true;
@@ -187,7 +229,8 @@ export function createViewer({ onIndexChange }) {
     const around = dir >= 0 ? [1, 2, -1] : [-1, -2, 1];
     for (const d of around) {
       const p = list[(index + d + list.length) % list.length];
-      if (!p || p === photo) continue;
+      // 视频不做预载：占内存大，且 object URL 生成本身零成本
+      if (!p || p === photo || p.type === 'video') continue;
       pin.add(p.id);
       media.full(p).then((u) => { const im = new Image(); im.decoding = 'async'; im.src = u; }).catch(() => {});
     }
@@ -239,6 +282,7 @@ export function createViewer({ onIndexChange }) {
       ${row('大小', fmtSize(photo.size))}
       ${row('尺寸', dims)}
       ${row('格式', ext(photo.name).toUpperCase())}
+      ${row('时长', photo.type === 'video' ? (fmtDur(m.duration) || '—') : null)}
     </dl></div>`;
 
     const taken = photo.taken
@@ -311,6 +355,12 @@ export function createViewer({ onIndexChange }) {
 
   function armSlide() {
     clearTimeout(slideTimer);
+    // 视频：进度条停用，播完由 onended 自动接下一张
+    if (isVideo()) {
+      prog.style.transition = 'none';
+      prog.style.width = '0%';
+      return;
+    }
     const ms = store.settings.slideMs;
 
     prog.style.transition = 'none';
@@ -373,6 +423,7 @@ export function createViewer({ onIndexChange }) {
 
   stage.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
+    if (e.target === vid) return;   // 别抢视频原生控件的指针
     stage.setPointerCapture(e.pointerId);
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
@@ -446,7 +497,7 @@ export function createViewer({ onIndexChange }) {
   }, { passive: false });
 
   stage.addEventListener('dblclick', (e) => {
-    if (!nw) return;
+    if (!nw || e.target === vid) return;
     if (scale > fitScale * 1.01) centerAtFit();
     else zoomTo(Math.max(1, fitScale * 2.5), e.clientX, e.clientY);
   });
@@ -478,6 +529,7 @@ export function createViewer({ onIndexChange }) {
       root.classList.remove('closing');
       root.setAttribute('aria-hidden', 'true');
       img.removeAttribute('src');
+      hideVideo();
       ambient.style.backgroundImage = 'none';
       stage.querySelectorAll('.vw-ghost').forEach((n) => n.remove());
     }, 180);
@@ -545,7 +597,10 @@ export function createViewer({ onIndexChange }) {
     else if (k === 'ArrowRight') { show(index + 1, 1); }
     else if (k === 'Home')   { show(0, -1); }
     else if (k === 'End')    { show(store.view.length - 1, 1); }
-    else if (k === ' ')      { setPlaying(!playing); }
+    else if (k === ' ')      {
+      if (isVideo()) { if (vid.paused) vid.play?.().catch?.(() => {}); else vid.pause(); }
+      else setPlaying(!playing);
+    }
     else if (k === 'i' || k === 'I') { togglePanel(); }
     else if (k === 's' || k === 'S') { $('#vwFav').click(); }
     else if (k === 'f' || k === 'F') { toggleFullscreen(); }

@@ -153,7 +153,7 @@
           <button class="btn btn-quiet" id="btnResume">继续浏览</button>
           <button class="icon-btn icon-btn-sm" id="btnForget" title="忘记这个图库"><svg><use href="#i-close"/></svg></button>
         </div>
-        <div class="empty-formats">JPEG · PNG · WebP · AVIF · GIF · BMP · TIFF · HEIC</div>
+        <div class="empty-formats">JPEG · PNG · WebP · AVIF · GIF · BMP · TIFF · HEIC<br />MP4 · WebM · MOV · MKV（浏览器解不开的会标注出来）</div>
       </div>
     </section>
 
@@ -170,8 +170,8 @@
 <div class="viewer" id="viewer" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="照片查看器">
   <div class="vw-ambient" id="vwAmbient"></div>
   <div class="vw-stage" id="vwStage">
-    <div class="vw-frame" id="vwFrame"><img id="vwImg" alt="" draggable="false" /></div>
-    <div class="vw-fail" id="vwFail" hidden><svg><use href="#i-broken"/></svg><p>浏览器无法解码这张图</p><small id="vwFailName"></small></div>
+    <div class="vw-frame" id="vwFrame"><img id="vwImg" alt="" draggable="false" /><video id="vwVid" controls playsinline hidden></video></div>
+    <div class="vw-fail" id="vwFail" hidden><svg><use href="#i-broken"/></svg><p>浏览器无法解码这个文件</p><small id="vwFailName"></small></div>
   </div>
 
   <div class="vw-chrome" id="vwChrome">

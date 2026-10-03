@@ -8,7 +8,7 @@
 
 import { media } from './media.js';
 import { store, bus, toggleFav } from './store.js';
-import { el, icon, rafThrottle, clamp, ext } from './util.js';
+import { el, icon, rafThrottle, clamp, ext, fmtDur } from './util.js';
 
 const GAP        = 6;
 const SEC_H      = 54;      // 分组标题占的高度
@@ -158,6 +158,7 @@ export function createGrid({ scroller, canvas, scrub, chip, onOpen }) {
 
       tile.innerHTML =
         `<img alt="" decoding="async" />` +
+        (p.type === 'video' ? `<span class="tile-dur">${fmtDur(p.meta?.duration) || ''}</span>` : '') +
         `<span class="tile-name"></span>` +
         `<button class="tile-fav" tabindex="-1" title="收藏">${icon('i-star')}</button>`;
       tile.querySelector('.tile-name').textContent = p.name;
