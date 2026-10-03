@@ -77,6 +77,10 @@ export function recompute() {
 
   if (scope.kind === 'fav') {
     list = list.filter((p) => p.fav);
+  } else if (scope.kind === 'photo') {
+    list = list.filter((p) => p.type !== 'video');
+  } else if (scope.kind === 'video') {
+    list = list.filter((p) => p.type === 'video');
   } else if (scope.kind === 'folder') {
     const pre = scope.value ? scope.value + '/' : '';
     list = scope.value
@@ -169,5 +173,9 @@ export function yearBuckets() {
 }
 
 export const favCount = () => store.photos.reduce((n, p) => n + (p.fav ? 1 : 0), 0);
+
+export const photoCount = () => store.photos.reduce((n, p) => n + (p.type === 'video' ? 0 : 1), 0);
+
+export const videoCount = () => store.photos.reduce((n, p) => n + (p.type === 'video' ? 1 : 0), 0);
 
 export const totalBytes = () => store.photos.reduce((n, p) => n + (p.size || 0), 0);

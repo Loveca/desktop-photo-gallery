@@ -13,17 +13,18 @@ echo   本地服务: %URL%
 echo   关闭这个窗口即停止服务。
 echo.
 
+rem server.py 会给每个响应加 no-store，免得浏览器拿旧代码糊弄你
 where python >nul 2>nul
 if not errorlevel 1 (
   start "" "%URL%"
-  python -m http.server %PORT% --bind 127.0.0.1
+  python "%~dp0server.py" %PORT%
   goto :end
 )
 
 where py >nul 2>nul
 if not errorlevel 1 (
   start "" "%URL%"
-  py -m http.server %PORT% --bind 127.0.0.1
+  py "%~dp0server.py" %PORT%
   goto :end
 )
 

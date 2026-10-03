@@ -6,7 +6,7 @@ import { $, el, icon, debounce, clamp, fmtSize, toast, popover } from './util.js
 import { loadSettings, saveSettings, loadFavs, addFav, delFav,
          saveLibrary, loadLibrary, forgetLibrary, idb } from './db.js';
 import { store, bus, setPhotos, setScope, setQuery, patchSettings,
-         recompute, yearBuckets, favCount, totalBytes } from './store.js';
+         recompute, yearBuckets, favCount, photoCount, videoCount, totalBytes } from './store.js';
 import { media } from './media.js';
 import { createGrid } from './grid.js';
 import { createViewer } from './viewer.js';
@@ -176,6 +176,8 @@ function wireSidebar() {
 function refreshSidebar() {
   const has = store.photos.length > 0;
   $('#cntAll').textContent = store.photos.length;
+  $('#cntPhoto').textContent = photoCount();
+  $('#cntVideo').textContent = videoCount();
   $('#cntFav').textContent = favCount();
   $('#sideFoot').hidden = !has;
 
