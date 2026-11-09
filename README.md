@@ -1,149 +1,145 @@
 <p align="center">
-  <h1 align="center">静照 · 本地相册</h1>
+  <h1 align="center">Desktop Photo Gallery</h1>
 </p>
 
 <p align="center">
-  <b>一个纯前端的本地照片浏览器</b><br>
-  选个文件夹，在本机读图、解析拍摄信息、生成缩略图，然后让你安静地看完。
+  <b>A purely client-side photo and video browser for a folder on your own machine.</b><br>
+  Pick a folder. It reads your images locally, parses capture metadata, builds thumbnails,<br>
+  then gets out of the way so you can look at them.
 </p>
 
 <p align="center">
-  <img alt="纯前端" src="https://img.shields.io/badge/纯前端-零依赖-4CAF50?style=flat-square">
-  <img alt="隐私" src="https://img.shields.io/badge/隐私-本地优先·零上传-4285F4?style=flat-square">
-  <img alt="IndexedDB" src="https://img.shields.io/badge/IndexedDB-本地存储-F4B400?style=flat-square">
-  <img alt="Web Worker" src="https://img.shields.io/badge/Web%20Worker-线程池-0EA5E9?style=flat-square">
-  <img alt="License" src="https://img.shields.io/badge/License-未声明-9E9E9E?style=flat-square">
+  <img alt="Client-side only" src="https://img.shields.io/badge/Client--side-zero%20dependencies-4CAF50?style=flat-square">
+  <img alt="Privacy" src="https://img.shields.io/badge/Privacy-local--first%C2%B7no%20uploads-4285F4?style=flat-square">
+  <img alt="IndexedDB" src="https://img.shields.io/badge/IndexedDB-local%20storage-F4B400?style=flat-square">
+  <img alt="Web Worker" src="https://img.shields.io/badge/Web%20Worker-thread%20pool-0EA5E9?style=flat-square">
+  <img alt="License" src="https://img.shields.io/badge/License-all%20rights%20reserved-9E9E9E?style=flat-square">
+</p>
+
+<p align="center">
+  <sub>The application UI is currently in Chinese only (静照 · 本地相册). This README describes it in English.</sub>
 </p>
 
 ---
 
-## 项目简介
+## What this is
 
-静照是一个纯前端的本地照片浏览器。选一个文件夹，它在本机读取照片、解析拍摄信息、生成缩略图，然后让你安静地看完。
+Desktop Photo Gallery is a static web app with no build step, no backend and no dependencies. You point it at a folder; it scans recursively, reads each file's header to recover dimensions and EXIF, renders thumbnails in worker threads, and lays the whole thing out in a virtualized grid.
 
-不上传、不联网、没有账号。所有数据（缩略图缓存、收藏、上次打开的图库）都存在浏览器本地。
+Nothing is uploaded and nothing is sent over the network. All state — the thumbnail cache, favorites, and the handle for the library you last opened — lives in your browser's local storage.
 
-### 本项目做什么
+### What it does
 
-- **本地读图** —— 递归扫描你选中的文件夹，读出尺寸、EXIF（拍摄时间、机身、镜头、光圈、快门、ISO、焦距、方向、GPS）并生成缩略图
-- **视频播放** —— MP4 / WebM / MOV 等视频与照片混排，缩略图取自 10% 处的一帧，点击即播、空格暂停
-- **虚拟化浏览** —— 几千张照片也能瞬间铺出网格，DOM 里只挂载视口内的几行
-- **安静看图** —— 缩放平移、幻灯片、EXIF 面板、收藏、全屏，鼠标停下 2.5 秒界面自动淡出
+- **Reads photos locally** — recursively scans the folder you choose, extracting dimensions and EXIF (capture time, body, lens, aperture, shutter, ISO, focal length, orientation, GPS) and generating thumbnails
+- **Plays video** — MP4 / WebM / MOV and friends are interleaved with photos in the same grid; thumbnails come from a frame at the 10% mark, click to play, space to pause
+- **Browses at scale** — thousands of photos lay out instantly, with only the rows inside the viewport ever mounted in the DOM
+- **Stays out of the way while you look** — zoom and pan, slideshow, EXIF panel, favorites, fullscreen; the chrome fades out after the mouse rests for 2.5 seconds
 
-### 本项目不做什么
+### What it doesn't do
 
-- **不上传** —— 任何图片、元数据都不会离开你的电脑，没有服务器、没有账号
-- **不联网** —— 打开即用，无任何外部请求
-- **只读** —— 不会改动、移动或删除你的任何文件
+- **No uploads** — no image or metadata ever leaves your computer. There is no server and no account.
+- **No network access** — it makes no external requests at all
+- **Read-only** — it will never modify, move or delete a single one of your files
 
-## 快速开始
+## Getting started
 
-双击 **`start.bat`**。它会起一个本地静态服务并自动打开浏览器。
+Double-click **`start.bat`**. It starts a local static server and opens your browser.
 
-> 必须走本地服务，不能直接双击 `index.html`：ES 模块、Web Worker、IndexedDB 在 `file://` 下会被浏览器拦掉。
-> `start.bat` 会依次找 Python / Node，任意一个都行。
+> It has to run over a local server — you can't just double-click `index.html`. ES modules, Web Workers and IndexedDB are all blocked by browsers under `file://`.
+> `start.bat` looks for Python or Node in turn; either one works.
 
-推荐 Chrome 或 Edge —— 它们支持 File System Access API，静照才能记住你的图库，下次打开一键恢复。
-其它浏览器会自动退回「选择文件夹」输入框 + 拖放，功能一样，只是不能记住。
+Chrome or Edge is recommended, because they support the File System Access API, which is what lets the app remember your library and restore it in one click next time. Other browsers fall back to a folder `<input>` plus drag-and-drop; everything works the same, it just can't be remembered.
 
-## 导入照片
+## Importing photos
 
-三种方式，效果相同：
+Three routes, all equivalent:
 
-- 点右上角 **打开文件夹**（Chrome / Edge 会弹出目录选择器）
-- 把文件夹直接 **拖进窗口**
-- 空状态页面上的 **选择文件夹**
+- Click **Open folder** in the top right (Chrome and Edge show a native directory picker)
+- **Drag a folder** into the window
+- Use **Choose folder** on the empty-state screen
 
-会递归读取子目录，自动跳过隐藏文件、`node_modules`、`.git`、`@eaDir`、回收站之类的目录。
+Subdirectories are read recursively. Hidden files and directories like `node_modules`, `.git`, `@eaDir` and the recycle bin are skipped automatically.
 
-支持 JPEG / PNG / WebP / AVIF / GIF / BMP / TIFF / HEIC，以及 MP4 / WebM / MOV / MKV / AVI 等视频。
-HEIC 能读出尺寸和 EXIF，但绝大多数浏览器解不了码，这类照片会显示成占位格；视频同理，能解的（MP4/H.264、WebM）直接播放，解不了的（常见 MKV / AVI）会标注出来。
+Supported formats are JPEG / PNG / WebP / AVIF / GIF / BMP / TIFF / HEIC for images, and MP4 / WebM / MOV / MKV / AVI for video. HEIC files yield their dimensions and EXIF, but most browsers can't decode the pixels, so those photos render as placeholder tiles. Video behaves the same way: what the browser can decode (MP4/H.264, WebM) plays directly, and what it can't (commonly MKV and AVI) is flagged as such.
 
-## 怎么用
+## Using it
 
-**浏览**
+**Browsing**
 
-| 键 | 作用 |
+| Key | Action |
 | --- | --- |
-| `/` | 搜索文件名 / 文件夹 |
-| `[` | 收起或展开侧栏 |
-| `T` | 明暗主题 |
-| `← ↑ ↓ →` | 移动选中 |
-| `Enter` | 打开选中的照片 |
-| `− / +` | 缩略图大小 |
-| `?` | 快捷键说明 |
+| `/` | Search by file name or folder |
+| `[` | Collapse or expand the sidebar |
+| `T` | Toggle light / dark theme |
+| `← ↑ ↓ →` | Move the selection |
+| `Enter` | Open the selected item |
+| `− / +` | Thumbnail size |
+| `?` | Show the shortcut reference |
 
-**看图**
+**Viewing**
 
-| 键 | 作用 |
+| Key | Action |
 | --- | --- |
-| `← →` | 上一张 / 下一张 |
-| `空格` | 幻灯片（带缓慢推移）；看视频时是播放 / 暂停 |
-| `I` | 照片信息（EXIF） |
-| `S` | 收藏 |
-| `M` | 静音 / 取消静音（视频） |
-| `F` | 全屏 |
-| `滚轮` / `双击` | 缩放；放大后拖拽平移（视频不参与缩放） |
-| `0` | 适应窗口 |
-| `Home` / `End` | 首张 / 末张 |
-| `Esc` | 退出 |
+| `← →` | Previous / next |
+| `Space` | Slideshow (with a slow drift); play / pause when viewing video |
+| `I` | Photo info (EXIF) |
+| `S` | Favorite |
+| `M` | Mute / unmute (video) |
+| `F` | Fullscreen |
+| `Wheel` / `double-click` | Zoom; drag to pan once zoomed in (video is excluded from zoom) |
+| `0` | Fit to window |
+| `Home` / `End` | First / last |
+| `Esc` | Exit |
 
-未缩放时左右拖拽也能翻页，触屏可双指缩放。鼠标停下 2.5 秒后界面自动淡出，动一下就回来。
+When not zoomed in, dragging left or right also turns the page, and touch screens support two-finger pinch zoom. The UI fades out 2.5 seconds after the mouse stops and returns on any movement.
 
-排序（拍摄时间 / 修改时间 / 文件名 / 大小）和分组（天 / 月 / 年 / 文件夹 / 不分组）在顶栏的排序菜单里。
-按时间分组时，网格右缘会出现年份刻度，点一下直接跳过去。
+Sorting (capture time / modified time / file name / size) and grouping (day / month / year / folder / none) live in the sort menu in the top bar. When grouping by time, a year scale appears along the right edge of the grid — click a year to jump straight to it.
 
-## 结构与设计
+## Structure and design
 
 ```
-index.html            外壳、SVG 图标雪碧图
-start.bat             本地服务启动器
+index.html            Shell, SVG icon sprite
+start.bat             Local server launcher
+server.py             Static server that adds no-store to every response
 styles/
-  base.css            设计变量、明暗主题、通用控件
-  shell.css           顶栏 / 侧栏 / 空状态 / 拖放遮罩
-  grid.css            照片网格
-  viewer.css          查看器
+  base.css            Design tokens, light/dark themes, shared controls
+  shell.css           Top bar, sidebar, empty state, drop overlay
+  grid.css            Photo grid
+  viewer.css          Viewer
 src/
-  app.js              启动与装配：导入流程、侧栏、快捷键
-  store.js            状态：筛选 → 搜索 → 排序 → 分组
-  library.js          三条导入路径（目录句柄 / 输入框 / 拖放）+ 文件夹树
-  media.js            工作线程池、两级优先队列、object URL 的 LRU
-  grid.js             虚拟化网格：等高行布局 + 只挂载视口内的行
-  viewer.js           查看器：缩放平移、切换、胶片条、幻灯片、EXIF 面板
-  db.js               IndexedDB：设置 / 目录句柄 / 元数据 / 缩略图 / 收藏
-  util.js             格式化与小工具
+  app.js              Boot and wiring: import flow, sidebar, shortcuts
+  store.js            State: filter → search → sort → group
+  library.js          Three import paths (directory handle / input / drop) + folder tree
+  media.js            Worker pool, two-level priority queue, LRU for object URLs
+  grid.js             Virtualized grid: equal-height row layout, viewport rows only
+  viewer.js           Viewer: zoom and pan, navigation, filmstrip, slideshow, EXIF panel
+  db.js               IndexedDB: settings / directory handles / metadata / thumbnails / favorites
+  util.js             Formatting and small helpers
 workers/
-  media-worker.js     文件头解析（尺寸 + EXIF）与缩略图编码
+  media-worker.js     File-header parsing (dimensions + EXIF) and thumbnail encoding
 ```
 
-### 几个关键设计
+### A few decisions worth calling out
 
-**只读文件头。** 扫描时每个文件只读前 192KB，手写解析 JPEG 的 SOF/APP1、PNG 的 IHDR、WebP 的
-VP8/VP8L/VP8X、GIF、BMP、以及 HEIC/AVIF 的 `ispe` 盒子，顺带把 EXIF（拍摄时间、机身、镜头、光圈、
-快门、ISO、焦距、方向、GPS）一起取出来。不解码整图，所以几千张也能很快铺出布局。EXIF 方向 5–8 的
-照片会在这一步就把宽高摆正，布局不会先横后竖地跳一下。
+**Only the header is read.** During a scan each file contributes just its first 192 KB. The app parses JPEG SOF/APP1, PNG IHDR, WebP VP8/VP8L/VP8X, GIF and BMP by hand, along with the `ispe` box for HEIC and AVIF, pulling EXIF (capture time, body, lens, aperture, shutter, ISO, focal length, orientation, GPS) out in the same pass. No full-image decode happens, which is why thousands of photos can be laid out quickly. Photos with an EXIF orientation of 5–8 have their width and height corrected at this stage, so the layout doesn't visibly flip from landscape to portrait a moment later.
 
-**缩略图在工作线程里做。** `createImageBitmap` 直接吐小图（已知原始尺寸时让解码器顺便缩放，省内存），
-`OffscreenCanvas` 编码成 WebP，主线程全程不碰像素。结果按 `路径|字节数|修改时间` 存进 IndexedDB ——
-文件一改指纹就变，缓存自动失效，不用操心过期。
+**Thumbnails are built off the main thread.** `createImageBitmap` produces the small image directly — when the source dimensions are already known, the decoder is asked to downscale as it goes, which keeps memory down — and `OffscreenCanvas` encodes it to WebP. The main thread never touches a pixel. Results are keyed in IndexedDB by `path|byteLength|modifiedTime`, so editing a file changes the fingerprint and invalidates that entry on its own; there is no expiry logic to maintain.
 
-**网格是虚拟化的。** 布局是一遍 O(n) 的纯计算，DOM 里只有视口内的那几行。2000 张照片的实测：
-网格 0.9s 出现，元数据 9.9s 解析完，画布高 96554px 而 DOM 里只有 36 个格子、229 个节点，JS 堆 5MB。
+**The grid is virtualized.** Layout is a single O(n) pure computation, and only the rows inside the viewport exist in the DOM. Measured on 2,000 photos: the grid appeared in 0.9 s, metadata finished parsing in 9.9 s, against a 96,554 px canvas height holding just 36 tiles and 229 DOM nodes, with a 5 MB JS heap.
 
-**两级优先队列。** 眼前的缩略图插队（后进先出，滚动时优先画你正在看的），后台预热排队（先进先出）。
-格子滚出视口时任务被降级而不是取消 —— 因为同一张图可能还有别的地方在等，而且这活儿早晚要干。
+**A two-level priority queue.** Thumbnails you are looking at right now jump the queue (LIFO, so scrolling favors what is on screen), while background prefetching waits its turn (FIFO). When a tile scrolls out of the viewport its task is demoted rather than cancelled — the same image may be awaited elsewhere, and the work has to happen eventually anyway.
 
-## 隐私与安全
+## Privacy and security
 
-- 不上传、不联网、没有账号；所有数据（缩略图缓存、收藏、上次打开的图库）只存在浏览器本地
-- 只读。静照不会改动、移动或删除你的任何文件
-- 「记住上次的图库」依赖 File System Access API（仅 Chromium 系有）；恢复时浏览器会要一次授权，这是浏览器的安全要求
+- No uploads, no network access, no account. All data (thumbnail cache, favorites, last-opened library) stays in your browser's local storage.
+- Read-only. The app never modifies, moves or deletes your files.
+- "Remember my last library" depends on the File System Access API (Chromium only). Restoring a library triggers a one-time permission prompt from the browser — that is a browser security requirement, not something the app can suppress.
 
-## 已知限制
+## Known limitations
 
-- HEIC 只能读元数据，显示要看浏览器支不支持解码。
-- 「记住上次的图库」依赖 File System Access API，只有 Chromium 系有。其它浏览器每次需手动选择文件夹。
+- HEIC support is metadata-only; whether the image displays depends on your browser's decoder.
+- "Remember my last library" requires the File System Access API, which only Chromium-based browsers ship. Everywhere else you re-pick the folder each session.
 
-## 许可
+## License
 
-本项目目前未声明开源许可，保留所有权利。如需用于其他用途，请联系作者。
+No open-source license has been declared for this project; all rights are reserved. Contact the author if you want to use it for another purpose.
